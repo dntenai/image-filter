@@ -29,16 +29,26 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
   //   the filtered image file [!!TIP res.sendFile(filteredpath); might be useful]
 
   /**************************************************************************** */
-  app.get('/filteredimage', async (req: Request, res: Response) => {
-    const{image_url}=req.query.image_url.toString();
-    if(!image_url) {
-      res.status(400).send('image url is required');
+  app.get('/filteredimage/',async ( req: Request, res: Response) => {
+    try {
+      let { image_url } = req.query;
+      if ( !image_url ) {
+        return res.status(400)
+                  .send(`image URL is required`);
+      }
+      const filteredImage:string = await filterImageFromURL(image_url)
+      
+      return res.status(200)
+                .sendFile(filteredImage, async()=>{
+                  await deleteLocalFiles([filteredImage])
+                });
+      
+    } 
+    catch (error) {
+      return res.status(422).send('image process error')
     }
-    const filtered_image = await filterImageFromURL(image_url);
-    res.status(200).sendFile(filtered_image, () => {
-      deleteLocalFiles([filtered_image]);
-    });
-  });
+    
+  })
   //! END @TODO1
   
   // Root Endpoint
