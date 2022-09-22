@@ -1,5 +1,6 @@
 import express from 'express';
 import bodyParser from 'body-parser';
+import {Router, Request, Response} from 'express';
 import {filterImageFromURL, deleteLocalFiles} from './util/util';
 
 (async () => {
@@ -28,7 +29,26 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
   //   the filtered image file [!!TIP res.sendFile(filteredpath); might be useful]
 
   /**************************************************************************** */
-
+  app.get('/filteredimage/',async ( req: Request, res: Response) => {
+    try {
+      let { image_url } = req.query;
+      if ( !image_url ) {
+        return res.status(400)
+                  .send(`image URL is required`);
+      }
+      const filteredImage:string = await filterImageFromURL(image_url)
+      
+      return res.status(200)
+                .sendFile(filteredImage, async()=>{
+                  await deleteLocalFiles([filteredImage])
+                });
+      
+    } 
+    catch (error) {
+      return res.status(422).send('image process error')
+    }
+    
+  })
   //! END @TODO1
   
   // Root Endpoint
